@@ -1,0 +1,102 @@
+import numpy as np
+from scipy.integrate import cumulative_trapezoid
+import matplotlib.pyplot as plt
+# change time here(in second)
+itime = 0.3
+# generate ascending number for the interpolation and to plot graph
+simnm = list(np.arange(360, 1100+1))
+a = np.array(simnm)
+# # select the spectrum range here
+# Laser profile range
+lsnm = list(np.arange(440, 580+1))
+a1 = np.array(lsnm)
+# PL profile range
+plnm = list(np.arange(620, 950+1))
+a2 = np.array(plnm)
+# unpack the raw data
+# Import the data here, either directly copy to the file in this app or copy the path to the place with in ' '
+# calibration curve
+x, y = np.loadtxt("curve", unpack=True, dtype=float)
+# no sample
+x1, y1 = np.loadtxt('No sample', unpack=True, dtype=float)
+# direct hit
+x2, y2 = np.loadtxt('Direct hit', unpack=True, dtype=float)
+qx2, qy2 = np.loadtxt('Direct hit', unpack=True, dtype=float)
+# Not direct hit
+x3, y3 = np.loadtxt('Not direct', unpack=True, dtype=float)
+qx3, qy3 = np.loadtxt('Not direct', unpack=True, dtype=float)
+# here m is the interpolation of the calibration curve, m2 is for pl
+m = np.array(np.interp(a1, x, y))
+m2 = np.array(np.interp(a2, x, y))
+# here y is the interpolation of the calibration curve
+Ly = np.interp(a1, x1, y1)
+b = np.array(np.interp(a1, x1, y1))
+# direct L
+Ly1 = np.interp(a1, x2, y2)
+b1 = np.array(Ly1)
+# Indirect L
+Ly2 = np.interp(a1, x3, y3)
+b2 = np.array(Ly2)
+# direct p
+Ly3 = np.interp(a2, qx2, qy2)
+b3 = np.array(Ly3)
+# Indirect P
+Ly4 = np.interp(a2, qx3, qy3)
+b4 = np.array(Ly4)
+# whole spectrum
+WLy = np.interp(a, x1, y1)
+Wb = np.array(Ly)
+# sample spectrum
+WLy1 = np.interp(a, x2, y2)
+Wb1 = np.array(Ly1)
+# Reference spectrum
+WLy2 = np.interp(a, x3, y3)
+Wb2 = np.array(Ly2)
+Lc = list(m*b)
+Lc1 = list(m*b1)
+Lc2 = list(m*b2)
+Lc3 = list(m2*b3)
+Lc4 = list(m2*b4)
+q = np.array(Lc)
+q1 = np.array(Lc1)
+q2 = np.array(Lc2)
+q3 = np.array(Lc3)
+q4 = np.array(Lc4)
+integral = cumulative_trapezoid(q, a1, initial=0)
+integral1 = cumulative_trapezoid(q1, a1, initial=0)
+integral2 = cumulative_trapezoid(q2, a1, initial=0)
+integral3 = cumulative_trapezoid(q3, a2, initial=0)
+integral4 = cumulative_trapezoid(q4, a2, initial=0)
+Lfa = np.array(integral)
+Lfc = np.array(integral1)
+Lfb = np.array(integral2)
+Pfc = np.array(integral3)
+Pfb = np.array(integral4)
+n = Lfa[-1]
+n1 = Lfb[-1]
+n2 = Lfc[-1]
+n3 = Pfc[-1]
+n4 = Pfb[-1]
+# integration time
+# DATA READY FOR CAL
+# no need to change itime here
+FLa = n/itime
+FLb = n1/itime
+FLc = n2/itime
+FPc = n3/itime
+FPb = n4/itime
+CA = 1-(FLc/FLb)
+Demellomethod = ((FPc-(1-CA)*FPb)/(FLa*CA))*100
+Oldmethod = (FPc/(FLa-FLc))*100
+print('Considering reabsorption is', round(Demellomethod, 3), '%')
+print('Not considering reabsorption is', round(Oldmethod, 3), '%')
+print('absorption coefficient', round(CA, 5))
+plt.title('spectrum')
+plt.xlabel('wavelength')
+plt.ylabel('intensity')
+plt.plot(a, WLy, '-', color='#0066ff', lw=1, label='no sample')
+plt.plot(a, WLy1, '--', color='#ff0066', lw=1, label='direct hit')
+plt.plot(a, WLy2, '-', color='#00cc66', ms=1, label='Not direct hit')
+plt.legend()
+plt.show()
+# blue: #0066ff, red: #ff0066, green:#00cc66, yellow:#ffff00, purple:#9900ff
